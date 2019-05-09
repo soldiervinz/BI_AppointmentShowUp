@@ -3,6 +3,8 @@ suppressMessages(library(dplyr))
 library(ggplot2)
 library(tidyr)
 library(scales)
+library(grid)
+library(gridExtra)
 
 data <- read.csv("KaggleV2-May-2016.csv")
 data <- tbl_df(data)
@@ -43,85 +45,56 @@ range(data$Age)
 smalldata <- head(data,n=600)
 str(smalldata)
 
-#4 diagramm per page
-par(mfrow=c(2,2))
+#Barplots followed. We always changed the negation from No.Show
 
 #ShowUp Gender
-barplot(table(smalldata$No.show,smalldata$Gender), #alle klassen, alle geschlechter, nur die erwachsenen, nur die �berlebenden
-  col = c("red","darkblue"), # Farbwerte für die Balken
-  border="white", # Farbe der Balkenränder, NA bedeutet keinen Rand
-  space=c(0.1,1), # Abstand(in, out) links vom Balken in % der Balkenbreite
-  legend=c("Showed up","Didnt showed Up"),  # Legende drucken
-  xlab="Gender",  # Beschriftung X-Achse
-  ylab="Appointments",  # Beschriftung der Y-Achse
-  main="Show Up Gender",
-)
+plot_gender <- ggplot(as.data.frame(smalldata)) + 
+  aes(x = Gender, fill = No.show) +
+  geom_bar(position = "fill") +
+  labs(title="Show Up Gender", x="Gender", y="Appointments") +  
+  scale_fill_discrete(name="Show up", labels=c("Yes", "No"))
 
 #ShowUp Scholarship
-barplot(table(smalldata$No.show,smalldata$Scholarship), #alle klassen, alle geschlechter, nur die erwachsenen, nur die �berlebenden
-        col = c("red","darkblue"), # Farbwerte für die Balken
-        border="white", # Farbe der Balkenränder, NA bedeutet keinen Rand
-        space=c(0.1,1), # Abstand(in, out) links vom Balken in % der Balkenbreite
-        legend=c("Showed up","Didnt showed Up"),  # Legende drucken
-        xlab="Scholarship",  # Beschriftung X-Achse
-        ylab="Appointments",  # Beschriftung der Y-Achse
-        main="Show Up Scholarship"
-)
+plot_scholarship <- ggplot(as.data.frame(smalldata)) + 
+  aes(x = Scholarship, fill = No.show) +
+  geom_bar(position = "fill") +
+  labs(title="Show Up Scholarship", x="Scholarship", y="Appointments") +  
+  scale_fill_discrete(name="Show up", labels=c("Yes", "No"))
 
 #ShowUp Hipertension
-barplot(table(smalldata$No.show,smalldata$Hipertension), #alle klassen, alle geschlechter, nur die erwachsenen, nur die �berlebenden
-        col = c("red","darkblue"), # Farbwerte für die Balken
-        border="white", # Farbe der Balkenränder, NA bedeutet keinen Rand
-        space=c(0.1,1), # Abstand(in, out) links vom Balken in % der Balkenbreite
-        legend=c("Showed up","Didnt showed Up"),  # Legende drucken
-        xlab="Hipertension",  # Beschriftung X-Achse
-        ylab="Appointments",  # Beschriftung der Y-Achse
-        main="Show Up Hipertension"
-)
+plot_hipertension <- ggplot(as.data.frame(smalldata)) + 
+  aes(x = Hipertension, fill = No.show) +
+  geom_bar(position = "fill") +
+  labs(title="Show Up Hipertension", x="Hipertension", y="Appointments") +  
+  scale_fill_discrete(name="Show up", labels=c("Yes", "No"))
 
 #ShowUp Diabetes
-barplot(table(smalldata$No.show,smalldata$Diabetes), #alle klassen, alle geschlechter, nur die erwachsenen, nur die �berlebenden
-        col = c("red","darkblue"), # Farbwerte für die Balken
-        border="white", # Farbe der Balkenränder, NA bedeutet keinen Rand
-        space=c(0.1,1), # Abstand(in, out) links vom Balken in % der Balkenbreite
-        legend=c("Showed up","Didnt showed Up"),  # Legende drucken
-        xlab="Diabetes",  # Beschriftung X-Achse
-        ylab="Appointments",  # Beschriftung der Y-Achse
-        main="Show Up Diabetes"
-)
+plot_diabetes <- ggplot(as.data.frame(smalldata)) + 
+  aes(x = Diabetes, fill = No.show) +
+  geom_bar(position = "fill") +
+  labs(title="Show Up Diabetes", x="Diabetes", y="Appointments") + 
+  scale_fill_discrete(name="Show up", labels=c("Yes", "No"))
 
 #ShowUp Alcoholism
-barplot(table(smalldata$No.show,smalldata$Alcoholism), #alle klassen, alle geschlechter, nur die erwachsenen, nur die �berlebenden
-        col = c("red","darkblue"), # Farbwerte für die Balken
-        border="white", # Farbe der Balkenränder, NA bedeutet keinen Rand
-        space=c(0.1,1), # Abstand(in, out) links vom Balken in % der Balkenbreite
-        legend=c("Showed up","Didnt showed Up"),  # Legende drucken
-        xlab="Alcoholism",  # Beschriftung X-Achse
-        ylab="Appointments",  # Beschriftung der Y-Achse
-        main="Show Up Alcoholism"
-)
+plot_alcoholism <- ggplot(as.data.frame(smalldata)) + 
+  aes(x = Alcoholism, fill = No.show) +
+  geom_bar(position = "fill") +
+  labs(title="Show Up Alcoholism", x="Alcoholism", y="Appointments") +  
+  scale_fill_discrete(name="Show up", labels=c("Yes", "No"))
 
 #ShowUp Handcap
-barplot(table(smalldata$No.show,smalldata$Handcap), #alle klassen, alle geschlechter, nur die erwachsenen, nur die �berlebenden
-        col = c("red","darkblue"), # Farbwerte für die Balken
-        border="white", # Farbe der Balkenränder, NA bedeutet keinen Rand
-        space=c(0.1,1), # Abstand(in, out) links vom Balken in % der Balkenbreite
-        legend=c("Showed up","Didnt showed Up"),  # Legende drucken
-        xlab="Handcap",  # Beschriftung X-Achse
-        ylab="Appointments",  # Beschriftung der Y-Achse
-        main="Show Up Handcap"
-)
+plot_handcap <- ggplot(as.data.frame(smalldata)) + 
+  aes(x = Handcap, fill = No.show) +
+  geom_bar(position = "fill") +
+  labs(title="Show Up Handcap", x="Handcap", y="Appointments") +  
+  scale_fill_discrete(name="Show up", labels=c("Yes", "No"))
 
 #ShowUp SMS received
-barplot(table(smalldata$No.show,smalldata$SMS_received), #alle klassen, alle geschlechter, nur die erwachsenen, nur die �berlebenden
-        col = c("red","darkblue"), # Farbwerte für die Balken
-        border="white", # Farbe der Balkenränder, NA bedeutet keinen Rand
-        space=c(0.1,1), # Abstand(in, out) links vom Balken in % der Balkenbreite
-        legend=c("Showed up","Didnt showed Up"),  # Legende drucken
-        xlab="SMS_received",  # Beschriftung X-Achse
-        ylab="Appointments",  # Beschriftung der Y-Achse
-        main="Show Up SMS_received"
-)
+plot_sms <- ggplot(as.data.frame(smalldata)) + 
+  aes(x = SMS_received, fill = No.show) +
+  geom_bar(position = "fill") +
+  labs(title="Show Up SMS Received", x="SMS Received", y="Appointments") +  
+  scale_fill_discrete(name="Show up", labels=c("Yes", "No"))
 
 #ShowUp Age
 ageData<-smalldata
@@ -131,27 +104,24 @@ ageData$group[which(ageData$Age %in% 21:40)] <- "21-40"
 ageData$group[which(ageData$Age %in% 41:60)] <- "41-60"
 ageData$group[which(ageData$Age %in% 60:200)] <- "60<"
 
-data_percentage=apply(data, 2, function(x){x*100/sum(x,na.rm=T)})
+plot_age <- ggplot(as.data.frame(ageData)) + 
+  aes(x = group, fill = No.show) +
+  geom_bar(position = "fill") +
+  labs(title="Show Up Agegroup", x="Agegroup", y="Appointments") + 
+  scale_fill_discrete(name="Show up", labels=c("Yes", "No"))
 
+#dayDifferences
+smalldata$dayDifferences <- smalldata$AppointmentDay - smalldata$ScheduledDay
+histo_dayDiffernces <- ggplot(smalldata, aes(x=dayDifferences)) + 
+  geom_histogram(bins=15) +
+  geom_bar(position = "fill") +
+  aes(fill = No.show) +
+  labs(title="Distribution Day Difference", x="Day difference", y="Appointments") + 
+  scale_fill_discrete(name="Show up", labels=c("Yes", "No"))
 
-set.seed(1124)
-data=matrix(sample(1:30,15) , nrow=3)
-colnames(data)=c("A","B","C","D","E")
-rownames(data)=c("var1","var2","var3")
+  
+#Show Plots
+grid.arrange(plot_gender, plot_scholarship, plot_hipertension, plot_diabetes, ncol=2)
+grid.arrange(plot_alcoholism, plot_handcap, plot_sms, plot_age, ncol=2)
+histo_dayDiffernces
 
-?barplot
-
-barplot(table(smalldata$No.show,ageData$group), #alle klassen, alle geschlechter, nur die erwachsenen, nur die �berlebenden
-        col = c("red","darkblue"), # Farbwerte für die Balken
-        border="white", # Farbe der Balkenränder, NA bedeutet keinen Rand
-        legend=c("Showed up","Didnt showed Up"),  # Legende drucken
-        xlab="Age groups",  # Beschriftung X-Achse
-        ylab="Appointments",  # Beschriftung der Y-Achse
-        main="Show Up Age"
-)
-?aes
-ggplot() + geom_bar(aes(y = percentage, x = ageData$group, fill = smalldata$No.show), data = ageData,
-                    stat="identity")
-
-#Only 1 diagramm
-par(mfrow=c(1,1))
