@@ -35,6 +35,81 @@ glimpse(ageErr)
 data <- filter(data, data$Age >= 0)
 range(data$Age)
 
+### Check for NA ~ no NA
+na <- sapply(data, is.na)
+any(na)
+
+### Check for NULL ~ no NULL
+nu <- sapply(data, is.null)
+any(nu)
+
+### Clean up PatientId ~ nothing
+summary(data$PatientId)
+patNumeric <- sapply(data$PatientId, is.numeric)
+all(patNumeric)
+
+### Clean up AppointmentID ~ nothing
+summary(data$AppointmentID)
+appNumeric <- sapply(data$AppointmentID, is.numeric)
+all(appNumeric)
+
+### Clean up Gender ~ nothing
+summary(data$Gender)
+
+### Clean up ScheduledDay ~ nothing
+class(data$ScheduledDay)
+summary(data$ScheduledDay) # min: 2015-11-10
+sort(data$ScheduledDay)
+
+### Clean up AppointmentDay ~ noting
+class(data$AppointmentDay)
+summary(data$AppointmentDay) # min: 2016-04-29
+
+### Clean up Neighbourhood
+summary(data$Neighbourhood)
+levels(data$Neighbourhood)
+str(data$Neighbourhood)
+# x <- data$Neighbourhood[37]
+# gsub("[^A-z]", "_", x)
+# gsub("")
+# gsub("[:punct:]", "_", x)
+
+
+### Clean up Scholarship
+str(data$Scholarship)
+
+### Clean up Hipertension ~ nothing
+str(data$Hipertension)
+
+### Clean up Diabetes ~ nothing
+str(data$Diabetes)
+
+### Clean up Alcoholism ~ nothing
+str(data$Alcoholism)
+
+### Clean up Handcap ~ levels [1 - 4] ==> level [1], and dropLevels [2 - 4]
+str(data$Handcap)
+summary(data$Handcap)
+
+hc <- data$Handcap
+for(i in 1:length(hc)) {
+  if (as.numeric(as.character(data$Handcap[i])) > 0) {
+    data$Handcap[i] = 1
+  }
+}
+
+# [for loop]
+data$Handcap <- droplevels(data$Handcap)
+summary(data$Handcap)
+
+### Clean up SMS_received ~ noting
+str(data$SMS_received)
+summary(data$SMS_received)
+
+### Clean up No-show
+str(data$No.show)
+summary(data$No.show)
+
 
 ###
 # descriptive statistics
