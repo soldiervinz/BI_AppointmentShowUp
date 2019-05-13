@@ -19,7 +19,7 @@ library(dplyr)
 suppressMessages(library(dplyr)) 
 
 noshow <- tbl_df(noShowData)
-str(noshow)
+glimpse(noshow)
 summary(noshow$SMS_received)
 
 # change type
@@ -39,7 +39,7 @@ noshow$SMS_received <- as.factor(noshow$SMS_received)
 # to Date factor
 # --> YYYY-MM-DD
 noshow$ScheduledDay <- as.Date.factor(noshow$ScheduledDay)
-str(noshow$ScheduledDay)
+glimpse(noshow$ScheduledDay)
 
 noshow$AppointmentDay <- as.Date.factor(noshow$AppointmentDay)
 head(noshow$AppointmentDay)
