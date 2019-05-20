@@ -59,11 +59,15 @@ summary(data$Gender)
 ### Clean up ScheduledDay ~ nothing
 class(data$ScheduledDay)
 summary(data$ScheduledDay) # min: 2015-11-10
-sort(data$ScheduledDay)
+head(sort(data$ScheduledDay))
+tail(sort(data$ScheduledDay))
 
 ### Clean up AppointmentDay ~ noting
 class(data$AppointmentDay)
 summary(data$AppointmentDay) # min: 2016-04-29
+head(sort(data$AppointmentDay))
+tail(sort(data$AppointmentDay))
+
 
 ### Clean up Neighbourhood
 summary(data$Neighbourhood)
@@ -75,7 +79,7 @@ str(data$Neighbourhood)
 # gsub("[:punct:]", "_", x)
 
 
-### Clean up Scholarship
+### Clean up Scholarship ~ nothing
 str(data$Scholarship)
 
 ### Clean up Hipertension ~ nothing
@@ -98,7 +102,7 @@ for(i in 1:length(hc)) {
   }
 }
 
-# [for loop]
+# drop levels which are not in use
 data$Handcap <- droplevels(data$Handcap)
 summary(data$Handcap)
 
