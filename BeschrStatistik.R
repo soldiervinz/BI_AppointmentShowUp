@@ -42,62 +42,59 @@ range(data$Age)
 # Descriptive statistic
 #####
 
-smalldata <- head(data,n=600)
-str(smalldata)
-
 #Barplots followed. We always changed the negation from No.Show
 
 #ShowUp Gender
-plot_gender <- ggplot(as.data.frame(smalldata)) + 
+plot_gender <- ggplot(as.data.frame(data)) + 
   aes(x = Gender, fill = No.show) +
   geom_bar(position = "fill") +
   labs(title="Show Up Gender", x="Gender", y="Appointments") +  
   scale_fill_discrete(name="Show up", labels=c("Yes", "No"))
 
 #ShowUp Scholarship
-plot_scholarship <- ggplot(as.data.frame(smalldata)) + 
+plot_scholarship <- ggplot(as.data.frame(data)) + 
   aes(x = Scholarship, fill = No.show) +
   geom_bar(position = "fill") +
   labs(title="Show Up Scholarship", x="Scholarship", y="Appointments") +  
   scale_fill_discrete(name="Show up", labels=c("Yes", "No"))
 
 #ShowUp Hipertension
-plot_hipertension <- ggplot(as.data.frame(smalldata)) + 
+plot_hipertension <- ggplot(as.data.frame(data)) + 
   aes(x = Hipertension, fill = No.show) +
   geom_bar(position = "fill") +
   labs(title="Show Up Hipertension", x="Hipertension", y="Appointments") +  
   scale_fill_discrete(name="Show up", labels=c("Yes", "No"))
 
 #ShowUp Diabetes
-plot_diabetes <- ggplot(as.data.frame(smalldata)) + 
+plot_diabetes <- ggplot(as.data.frame(data)) + 
   aes(x = Diabetes, fill = No.show) +
   geom_bar(position = "fill") +
   labs(title="Show Up Diabetes", x="Diabetes", y="Appointments") + 
   scale_fill_discrete(name="Show up", labels=c("Yes", "No"))
 
 #ShowUp Alcoholism
-plot_alcoholism <- ggplot(as.data.frame(smalldata)) + 
+plot_alcoholism <- ggplot(as.data.frame(data)) + 
   aes(x = Alcoholism, fill = No.show) +
   geom_bar(position = "fill") +
   labs(title="Show Up Alcoholism", x="Alcoholism", y="Appointments") +  
   scale_fill_discrete(name="Show up", labels=c("Yes", "No"))
 
 #ShowUp Handcap
-plot_handcap <- ggplot(as.data.frame(smalldata)) + 
+plot_handcap <- ggplot(as.data.frame(data)) + 
   aes(x = Handcap, fill = No.show) +
   geom_bar(position = "fill") +
   labs(title="Show Up Handcap", x="Handcap", y="Appointments") +  
   scale_fill_discrete(name="Show up", labels=c("Yes", "No"))
 
 #ShowUp SMS received
-plot_sms <- ggplot(as.data.frame(smalldata)) + 
+plot_sms <- ggplot(as.data.frame(data)) + 
   aes(x = SMS_received, fill = No.show) +
   geom_bar(position = "fill") +
   labs(title="Show Up SMS Received", x="SMS Received", y="Appointments") +  
   scale_fill_discrete(name="Show up", labels=c("Yes", "No"))
 
 #ShowUp Age
-ageData<-smalldata
+ageData<-data
 ageData$group <- 0
 ageData$group[which(ageData$Age %in% 0:20)] <- "0-20"
 ageData$group[which(ageData$Age %in% 21:40)] <- "21-40"
@@ -111,17 +108,72 @@ plot_age <- ggplot(as.data.frame(ageData)) +
   scale_fill_discrete(name="Show up", labels=c("Yes", "No"))
 
 #dayDifferences
-smalldata$dayDifferences <- smalldata$AppointmentDay - smalldata$ScheduledDay
-histo_dayDiffernces <- ggplot(smalldata, aes(x=dayDifferences)) + 
+data$dayDifferences <- data$AppointmentDay - data$ScheduledDay
+histo_dayDiffernces <- ggplot(data, aes(x=dayDifferences)) + 
   geom_histogram(bins=15) +
   geom_bar(position = "fill") +
-  aes(fill = No.show) +
-  labs(title="Distribution Day Difference", x="Day difference", y="Appointments") + 
-  scale_fill_discrete(name="Show up", labels=c("Yes", "No"))
+  labs(title="Distribution Day Difference", x="Day difference", y="Appointments")
 
-  
 #Show Plots
+histo_dayDiffernces
 grid.arrange(plot_gender, plot_scholarship, plot_hipertension, plot_diabetes, ncol=2)
 grid.arrange(plot_alcoholism, plot_handcap, plot_sms, plot_age, ncol=2)
-histo_dayDiffernces
 
+#statistische Relevanz
+fisher.test(data$No.show, data$Scholarship) #signifikant -> stipendiate kommen weniger 
+fisher.test(data$No.show, data$Hipertension) #signifikant -> hipertensive kommen mehr
+fisher.test(data$No.show, data$Diabetes) #signifikant -> diabetes kommen mehr
+fisher.test(data$No.show, data$Alcoholism) #kein einfluss
+fisher.test(data$No.show, data$Handcap) 
+fisher.test(data$No.show, data$SMS_received) #signifikant -> sms kommen weniger
+
+#Ab wieviel Tagesdiffernz wurde ein SMS verschickt
+plot_PercSmsDayDifference <- ggplot(as.data.frame(data)) + 
+  aes(x = dayDifferences, fill = SMS_received) +
+  geom_bar(position = "fill") +
+  labs(title="Percentage Distribution Day Difference", x="Day difference", y="Appointments")
+plot_smsDayDifference <- ggplot(data) + 
+  aes(x = dayDifferences, fill = SMS_received) +
+  geom_bar() +
+  labs(title="Distribution Day Difference", x="Day difference", y="Appointments")
+grid.arrange(plot_PercSmsDayDifference, plot_smsDayDifference)
+subset(data, dayDifferences<=2 & SMS_received==1) # Tagesdifferenz von zwei Tagen gibt es kein SMS
+#Wie ist Verhältnis ohne diese kurzen Abständen
+plot_sms_extended <- ggplot(as.data.frame(subset(data, dayDifferences>2))) + 
+  aes(x = SMS_received, fill = No.show) +
+  geom_bar(position = "fill") +
+  labs(title="Show Up SMS Received without DayDifference<=2", x="SMS Received", y="Appointments") +  
+  scale_fill_discrete(name="Show up", labels=c("Yes", "No"))
+grid.arrange(plot_sms, plot_sms_extended)
+fisher.test(subset(data, dayDifferences>2)$No.show, subset(data, dayDifferences>2)$SMS_received) #signifikant -> sms kommen mehr
+
+
+
+
+
+
+
+
+#Nur Testing
+#Unterschied Tagesdiffernz 0 und ab 50
+day0 <- ggplot(as.data.frame(filter(data, data$dayDifferences == 0))) + 
+  aes(x = "", fill = No.show) +
+  geom_bar(position = "fill") +
+  labs(title="day0", x="", y="Appointments") + 
+  scale_fill_discrete(name="Show up", labels=c("Yes", "No"))
+day1 <- ggplot(as.data.frame(filter(data, data$dayDifferences > 50))) + 
+  aes(x = "", fill = No.show) +
+  geom_bar(position = "fill") +
+  labs(title="day>0", x="", y="Appointments") + 
+  scale_fill_discrete(name="Show up", labels=c("Yes", "No"))
+grid.arrange(day0, day1)
+
+#In welchem Monat wurde viel SMS verschickt -> Scheinbar im April keine SMS versendet -> aber falsch
+ggplot(data, aes(x=AppointmentDay)) + 
+  aes(fill = SMS_received) +
+  geom_bar(position = "fill") +
+  labs(title="Distribution Day Difference", x="Day difference", y="Appointments")
+ggplot(data, aes(x=ScheduledDay)) + 
+  aes(fill = SMS_received) +
+  geom_bar(position = "fill") +
+  labs(title="Distribution Day Difference", x="Day difference", y="Appointments")
