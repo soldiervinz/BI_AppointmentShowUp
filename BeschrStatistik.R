@@ -5,10 +5,10 @@ library(tidyr)
 library(scales)
 library(grid)
 library(gridExtra)
+library(rpart)
 
 data <- read.csv("KaggleV2-May-2016.csv")
 data <- tbl_df(data)
-
 #####
 # Data Cleanup
 #####
@@ -147,12 +147,23 @@ plot_sms_extended <- ggplot(as.data.frame(subset(data, dayDifferences>2))) +
 grid.arrange(plot_sms, plot_sms_extended)
 fisher.test(subset(data, dayDifferences>2)$No.show, subset(data, dayDifferences>2)$SMS_received) #signifikant -> sms kommen mehr
 
+#Fragestellung: Wann kommen die Leute weniger?
+#dayDifferences hat einen grossen Einfluss
+fit <- rpart(No.show ~ Age+Gender+Scholarship+Hipertension+Diabetes+Alcoholism+Handcap+SMS_received+dayDifferences, method="class", data=data, control=rpart.control(cp=0.0001,maxdepth=7))
+#Nur dayDifferences
+fit <- rpart(No.show ~ dayDifferences, method="class", data=data, control=rpart.control(cp=0.00001))
+#Extremwerte unter drei Tagen entfernen
+smallData <- subset(data, dayDifferences>2)
+fit <- rpart(No.show ~ Age+Gender+Scholarship+Hipertension+Diabetes+Alcoholism+Handcap+SMS_received+dayDifferences, method="class", data=smallData, control=rpart.control(cp=0.0001,maxdepth=8))
+#Alter&Gender entfernen, weil unethisch nach Alter auswählen
+fit <- rpart(No.show ~ Scholarship+Hipertension+Diabetes+Alcoholism+Handcap+SMS_received+dayDifferences, method="class", data=smallData, control=rpart.control(cp=0.0001,maxdepth=8))
 
-
-
-
-
-
+printcp(fit) # display the results
+plotcp(fit) # visualize cross-validation results # Anzahl Ebene basierend auf zufällige Verteilung basierend. 
+summary(fit) # detailed summary of splits # wann er wirklich gesplittet hat
+plot(fit, uniform=TRUE, main="Classification Tree for Biopsy")
+text(fit, use.n=TRUE, all=TRUE, cex=.8)
+#-> Die Chance dass jemand nicht kommt ist immer eher klein. interessant wäre es aber ab wann es signifikant zunimmt
 
 #Nur Testing
 #Unterschied Tagesdiffernz 0 und ab 50
