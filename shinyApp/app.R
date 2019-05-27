@@ -40,6 +40,7 @@ glimpse(data$No.show)
 data$ScheduledDay <- as.Date.factor(data$ScheduledDay)
 data$AppointmentDay <- as.Date.factor(data$AppointmentDay)
 
+defData <- data
 
 ### Clean up variable Age
 # start at age 0
@@ -147,8 +148,6 @@ histo_dayDiffernces <- ggplot(data, aes(x=dayDifferences)) +
   geom_bar(position = "fill") +
   labs(title="Distribution Day Difference", x="Day difference", y="Appointments")
 
-
-
 #Show Plots
 #histo_dayDiffernces
 #grid.arrange(plot_gender, plot_scholarship, plot_hipertension, plot_diabetes, ncol=2)
@@ -158,26 +157,40 @@ histo_dayDiffernces <- ggplot(data, aes(x=dayDifferences)) +
 # Define UI for application that draws a histogram
 ui <- fluidPage(
    
-   # Application title
-   titlePanel("No Show"),
+  navbarPage("Navbar",
+             tabPanel("Data",
+                      mainPanel(
+                        tableOutput("data"),
+                        h2("Data Cleanup"),
+                        h4("Age"),
+                        verbatimTextOutput("cleanup_age"),
+                        h4("Handycap"),
+                        verbatimTextOutput("cleanup_handcap"),
+                        verbatimTextOutput("cleanup_handcap2"),
+                        verbatimTextOutput("cleanup_handcap3")
+                      )),
+             tabPanel("Plot",
+                      # Sidebar with a slider input for number of bins 
+                      sidebarLayout(
+                        sidebarPanel("Choose the Variables",
+                                     checkboxInput(inputId = "is_gender", label = "Gender", value=T),
+                                     checkboxInput(inputId = "is_scholarship", label = "Scholarship", value = T),
+                                     checkboxInput(inputId = "is_hipertension", label = "Hipertension", value = F),
+                                     checkboxInput(inputId = "is_diabetes", label = "Diabetes", value = F),
+                                     checkboxInput(inputId = "is_alcoholism", label = "Alcoholism", value = F),
+                                     checkboxInput(inputId = "is_handcap", label = "Handcap", value = F)
+                        ),
+                        
+                        # Show a plot of the generated distribution
+                        mainPanel(
+                          column(6,plotOutput(outputId="plotgraph",height="400px", width = "1000px"))
+                        )
+                      )
+             )
+             
+                      ))
    
-   # Sidebar with a slider input for number of bins 
-   sidebarLayout(
-      sidebarPanel("Choose the Variables",
-                   checkboxInput(inputId = "is_gender", label = "Gender", value=T),
-                   checkboxInput(inputId = "is_scholarship", label = "Scholarship", value = T),
-                   checkboxInput(inputId = "is_hipertension", label = "Hipertension", value = F),
-                   checkboxInput(inputId = "is_diabetes", label = "Diabetes", value = F),
-                   checkboxInput(inputId = "is_alcoholism", label = "Alcoholism", value = F),
-                   checkboxInput(inputId = "is_handcap", label = "Handcap", value = F)
-      ),
-      
-      # Show a plot of the generated distribution
-      mainPanel(
-        column(6,plotOutput(outputId="plotgraph",height="400px", width = "1000px"))
-      )
-   )
-)
+   
 
 # Define server logic required to draw a histogram
 server <- function(input, output) {
@@ -205,6 +218,7 @@ server <- function(input, output) {
      if(!input$is_handcap) return(NULL)
      plot_handcap
    })
+   ### Output Plot
    output$plotgraph <- renderPlot({
       # generate bins based on input$bins from ui.R
       plotlist <- list(pt1(), pt2(), pt3(), pt4(), pt5(), pt6())
@@ -213,6 +227,40 @@ server <- function(input, output) {
       plotlist <- plotlist[not_null]
       if (length(plotlist)==0) return(NULL)
       grid.arrange(grobs=plotlist, ncol=length(plotlist))
+   })
+   
+   ### Output Data
+   output$data <- renderTable({
+     head(data[,c(3,5:14)])
+   })
+   
+   ### Output Cleanup
+   output$cleanup_age <- renderPrint({
+     print("#Patient with error in Age")
+     ageErr <- filter(defData, defData$Age < 0)
+     glimpse(ageErr)
+   })
+   
+   output$cleanup_handcap <- renderPrint({
+     print("#Summary of Handcap")
+     summary(defData$Handcap)
+   })
+   
+   output$cleanup_handcap2 <- renderPrint({
+     hc <- defData$Handcap
+     for(i in 1:length(hc)) {
+       if (as.numeric(as.character(defData$Handcap[i])) > 0) {
+         defData$Handcap[i] = 1
+       }
+     }
+     print("#Summarise Handycap 1, 2, 3 and 4 together")
+     summary(defData$Handcap)
+   })
+   
+   output$cleanup_handcap3 <- renderPrint({
+     defData$Handcap <- droplevels(defData$Handcap)
+     print("#Drop levels")
+     summary(data$Handcap)
    })
 }
 
