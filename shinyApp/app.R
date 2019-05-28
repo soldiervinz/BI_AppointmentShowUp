@@ -155,11 +155,10 @@ histo_dayDiffernces <- ggplot(data, aes(x=dayDifferences)) +
 
 
 # Define UI for application that draws a histogram
-ui <- fluidPage(
-   
-  navbarPage("Navbar",
-             tabPanel("Data",
+ui <- navbarPage("BI",
+             tabPanel("Data Cleanup",
                       mainPanel(
+                
                         tableOutput("data"),
                         h2("Data Cleanup"),
                         h4("Age"),
@@ -169,10 +168,21 @@ ui <- fluidPage(
                         verbatimTextOutput("cleanup_handcap2"),
                         verbatimTextOutput("cleanup_handcap3")
                       )),
-             tabPanel("Plot",
+             tabPanel("Data Aggregation", 
+                      mainPanel(
+                        h4("AppointmentDay vs. SheduleDay"),
+                        h5("AppointmentDay ist the day, when the patient made the Appointment"),
+                        h5("SheduleDay ist the day, when the patient should visit the doctor"),
+                        h4("DayDifference"),
+                        verbatimTextOutput("data_aggregation"),
+                        plotOutput("data_aggregation_hist")
+                      )),
+             tabPanel("Descriptiv",
                       # Sidebar with a slider input for number of bins 
                       sidebarLayout(
+                        
                         sidebarPanel("Choose the Variables",
+                                
                                      checkboxInput(inputId = "is_gender", label = "Gender", value=T),
                                      checkboxInput(inputId = "is_scholarship", label = "Scholarship", value = T),
                                      checkboxInput(inputId = "is_hipertension", label = "Hipertension", value = F),
@@ -183,12 +193,17 @@ ui <- fluidPage(
                         
                         # Show a plot of the generated distribution
                         mainPanel(
-                          column(6,plotOutput(outputId="plotgraph",height="400px", width = "1000px"))
+                          column(6,plotOutput(outputId="plotgraph",height="400px", width = "800px"))
                         )
                       )
-             )
-             
+             ),
+             tabPanel("ML",
+                      mainPanel(
+                        h5("here comes ML")
                       ))
+             
+)
+
    
    
 
@@ -231,8 +246,8 @@ server <- function(input, output) {
    
    ### Output Data
    output$data <- renderTable({
-     head(data[,c(3,5:14)])
-   })
+     head(data[, 3:14])
+   }, spacing = "xs")
    
    ### Output Cleanup
    output$cleanup_age <- renderPrint({
@@ -261,6 +276,16 @@ server <- function(input, output) {
      defData$Handcap <- droplevels(defData$Handcap)
      print("#Drop levels")
      summary(data$Handcap)
+   })
+   
+   ### Data Aggregation
+   output$data_aggregation <- renderPrint({
+     print("#Create column dayDifference")
+     summary(as.integer(data$dayDifferences))
+   })
+   
+   output$data_aggregation_hist <- renderPlot({
+     histo_dayDiffernces
    })
 }
 
