@@ -155,36 +155,9 @@ fit <- rpart(No.show ~ dayDifferences, method="class", data=data, control=rpart.
 #Extremwerte unter drei Tagen entfernen
 smallData <- subset(data, dayDifferences>2)
 fit <- rpart(No.show ~ Age+Gender+Scholarship+Hipertension+Diabetes+Alcoholism+Handcap+SMS_received+dayDifferences, method="class", data=smallData, control=rpart.control(cp=0.0001,maxdepth=8))
-#Alter&Gender entfernen, weil unethisch nach Alter auswählen
-fit <- rpart(No.show ~ Scholarship+Hipertension+Diabetes+Alcoholism+Handcap+SMS_received+dayDifferences, method="class", data=smallData, control=rpart.control(cp=0.0001,maxdepth=8))
 
 printcp(fit) # display the results
 plotcp(fit) # visualize cross-validation results # Anzahl Ebene basierend auf zufällige Verteilung basierend. 
 summary(fit) # detailed summary of splits # wann er wirklich gesplittet hat
 plot(fit, uniform=TRUE, main="Classification Tree for Biopsy")
 text(fit, use.n=TRUE, all=TRUE, cex=.8)
-#-> Die Chance dass jemand nicht kommt ist immer eher klein. interessant wäre es aber ab wann es signifikant zunimmt
-
-#Nur Testing
-#Unterschied Tagesdiffernz 0 und ab 50
-day0 <- ggplot(as.data.frame(filter(data, data$dayDifferences == 0))) + 
-  aes(x = "", fill = No.show) +
-  geom_bar(position = "fill") +
-  labs(title="day0", x="", y="Appointments") + 
-  scale_fill_discrete(name="Show up", labels=c("Yes", "No"))
-day1 <- ggplot(as.data.frame(filter(data, data$dayDifferences > 50))) + 
-  aes(x = "", fill = No.show) +
-  geom_bar(position = "fill") +
-  labs(title="day>0", x="", y="Appointments") + 
-  scale_fill_discrete(name="Show up", labels=c("Yes", "No"))
-grid.arrange(day0, day1)
-
-#In welchem Monat wurde viel SMS verschickt -> Scheinbar im April keine SMS versendet -> aber falsch
-ggplot(data, aes(x=AppointmentDay)) + 
-  aes(fill = SMS_received) +
-  geom_bar(position = "fill") +
-  labs(title="Distribution Day Difference", x="Day difference", y="Appointments")
-ggplot(data, aes(x=ScheduledDay)) + 
-  aes(fill = SMS_received) +
-  geom_bar(position = "fill") +
-  labs(title="Distribution Day Difference", x="Day difference", y="Appointments")
