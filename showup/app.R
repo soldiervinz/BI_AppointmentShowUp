@@ -56,7 +56,102 @@ histo_dayDiffernces <- ggplot(data, aes(x=as.integer(dayDifferences))) +
   labs(title="Distribution Day Difference", x="Day difference", y="Appointments")
 
 
+#####
+# Descriptiv
+#####
+#ShowUp Gender
+plot_gender <- ggplot(as.data.frame(data)) + 
+  aes(x = Gender, fill = No.show) +
+  geom_bar(position = "fill") +
+  labs(title="Show Up Gender", x="Gender", y="Appointments") +  
+  scale_fill_discrete(name="Show up", labels=c("Yes", "No"))
 
+#ShowUp Scholarship
+plot_scholarship <- ggplot(as.data.frame(data)) + 
+  aes(x = Scholarship, fill = No.show) +
+  geom_bar(position = "fill") +
+  labs(title="Show Up Scholarship", x="Scholarship", y="Appointments") +  
+  scale_fill_discrete(name="Show up", labels=c("Yes", "No"))
+
+#ShowUp Hipertension
+plot_hipertension <- ggplot(as.data.frame(data)) + 
+  aes(x = Hipertension, fill = No.show) +
+  geom_bar(position = "fill") +
+  labs(title="Show Up Hipertension", x="Hipertension", y="Appointments") +  
+  scale_fill_discrete(name="Show up", labels=c("Yes", "No"))
+
+#ShowUp Diabetes
+plot_diabetes <- ggplot(as.data.frame(data)) + 
+  aes(x = Diabetes, fill = No.show) +
+  geom_bar(position = "fill") +
+  labs(title="Show Up Diabetes", x="Diabetes", y="Appointments") + 
+  scale_fill_discrete(name="Show up", labels=c("Yes", "No"))
+
+#ShowUp Alcoholism
+plot_alcoholism <- ggplot(as.data.frame(data)) + 
+  aes(x = Alcoholism, fill = No.show) +
+  geom_bar(position = "fill") +
+  labs(title="Show Up Alcoholism", x="Alcoholism", y="Appointments") +  
+  scale_fill_discrete(name="Show up", labels=c("Yes", "No"))
+
+#ShowUp Handcap
+plot_handcap <- ggplot(as.data.frame(data)) + 
+  aes(x = Handcap, fill = No.show) +
+  geom_bar(position = "fill") +
+  labs(title="Show Up Handcap", x="Handcap", y="Appointments") +  
+  scale_fill_discrete(name="Show up", labels=c("Yes", "No"))
+
+#ShowUp SMS received
+plot_sms <- ggplot(as.data.frame(data)) + 
+  aes(x = SMS_received, fill = No.show) +
+  geom_bar(position = "fill") +
+  labs(title="Show Up SMS Received", x="SMS Received", y="Appointments") +  
+  scale_fill_discrete(name="Show up", labels=c("Yes", "No"))
+
+#ShowUp Age
+ageData<-data
+ageData$group <- 0
+ageData$group[which(ageData$Age %in% 0:20)] <- "0-20"
+ageData$group[which(ageData$Age %in% 21:40)] <- "21-40"
+ageData$group[which(ageData$Age %in% 41:60)] <- "41-60"
+ageData$group[which(ageData$Age %in% 60:200)] <- "60<"
+
+plot_age <- ggplot(as.data.frame(ageData)) + 
+  aes(x = group, fill = No.show) +
+  geom_bar(position = "fill") +
+  labs(title="Show Up Agegroup", x="Agegroup", y="Appointments") + 
+  scale_fill_discrete(name="Show up", labels=c("Yes", "No"))
+
+#dayDifferences
+data$dayDifferences <- data$AppointmentDay - data$ScheduledDay
+histo_dayDiffernces <- ggplot(data, aes(x=dayDifferences)) + 
+  geom_histogram(bins=15) +
+  geom_bar(position = "fill") +
+  labs(title="Distribution Day Difference", x="Day difference", y="Appointments")
+
+
+#Ab wieviel Tagesdiffernz wurde ein SMS verschickt
+plot_PercSmsDayDifference <- ggplot(as.data.frame(data)) + 
+  aes(x = dayDifferences, fill = SMS_received) +
+  geom_bar(position = "fill") +
+  labs(title="Percentage Distribution Day Difference", x="Day difference", y="Appointments")
+plot_smsDayDifference <- ggplot(data) + 
+  aes(x = dayDifferences, fill = SMS_received) +
+  geom_bar() +
+  labs(title="Distribution Day Difference", x="Day difference", y="Appointments")
+grid.arrange(plot_PercSmsDayDifference, plot_smsDayDifference)
+subset(data, dayDifferences<=2 & SMS_received==1) # Tagesdifferenz von zwei Tagen gibt es kein SMS
+#Wie ist Verh?ltnis ohne diese kurzen Abst?nden
+plot_sms_extended <- ggplot(as.data.frame(subset(data, dayDifferences>2))) + 
+  aes(x = SMS_received, fill = No.show) +
+  geom_bar(position = "fill") +
+  labs(title="Show Up SMS Received without DayDifference<=2", x="SMS Received", y="Appointments") +  
+  scale_fill_discrete(name="Show up", labels=c("Yes", "No"))
+
+
+######
+# shiny App
+######
 ui <- dashboardPage(
   dashboardHeader(title = "BI - No Show"),
   ## Sidebar content
@@ -64,8 +159,8 @@ ui <- dashboardPage(
     sidebarMenu(
       menuItem("Data Cleanup", tabName = "data_cleanup"),
       menuItem("Aggregation", tabName = "aggregation"),
-      menuItem("Deskriptiv", tabName = "widgets"),
-      menuItem("ML", tabName = "widgets")
+      menuItem("Deskriptiv", tabName = "descriptiv"),
+      menuItem("ML", tabName = "ml")
       
     )
   ),
@@ -107,10 +202,59 @@ ui <- dashboardPage(
                 ),
                 box(width = 12, title = "Histogramm of dayDifference", solidHeader = TRUE,
                     "Each row with a negativ dayDifference has been deleted",
+                    verbatimTextOutput("data_aggregation2"),
                     plotOutput("data_aggregation_hist")
                 )
               )
-      )
+      ),
+      tabItem(tabName = "descriptiv",
+              fluidRow(
+                tabBox(title = "Visualisation", width = 12,
+                       id="tabset",
+                       tabPanel("Binary Variable",
+                                sidebarLayout(
+                                  sidebarPanel("Select Variable",
+                                               checkboxInput(inputId = "is_gender", label = "Gender", value=T),
+                                               checkboxInput(inputId = "is_scholarship", label = "Scholarship", value = T),
+                                               checkboxInput(inputId = "is_hipertension", label = "Hipertension", value = F),
+                                               checkboxInput(inputId = "is_diabetes", label = "Diabetes", value = F),
+                                               checkboxInput(inputId = "is_alcoholism", label = "Alcoholism", value = F),
+                                               checkboxInput(inputId = "is_handcap", label = "Handcap", value = F),
+                                               checkboxInput(inputId = "is_sms", label = "SMS", value = F),
+                                               checkboxInput(inputId = "is_age", label = "Age", value = F) 
+                                  ),
+                                  mainPanel(
+                                    tabPanel("Plots", column(6,plotOutput(outputId="plotgraph",height="400px", width = "600px")))
+                                  )
+                                  
+                                )
+                                ),
+                       tabPanel("SMS received Details",    tabPanel("SMS",
+                                                                    box(
+                                                                        "At first glance it seems that reveiving an sms has an negativ impact of showing up",
+                                                                        plotOutput("sms_detail_sms_plot")),
+                                                                    box( width = 12,
+                                                                        "But in the plots you can see, that (almost) nobody gets an sms if the dayDifference is <= 3 days",
+                                                                        plotOutput("sms_percent")
+                                                                        ),
+                                                                    box(width = 12,
+                                                                        "Most of the Appointsments has an dayDifference less than 3 days",
+                                                                        plotOutput("sms_absolut")
+                                                                        ),
+                                                                    infoBox("DayDifference","This is an importan factor", fill = TRUE, width = 12),
+                                                                    box(
+                                                                      plotOutput("dayDifference_factor")
+                                                                    ),
+                                                                    infoBox("SMS received","dayDifference affect sms received", fill = TRUE, width = 12),
+                                                                    box(
+                                                                      plotOutput("sms")
+                                                                    ),
+                                                                    box(
+                                                                      plotOutput("sms_extended")
+                                                                    )
+                                                    )))
+                
+              ))
     )
   )
   
@@ -159,9 +303,91 @@ server <- function(input, output) {
     range(defData$dayDifferences)
   })
   
+  output$data_aggregation2 <- renderPrint({
+    range(data$dayDifferences)
+  })
+  
   output$data_aggregation_hist <- renderPlot({
     histo_dayDiffernces
   })
+  
+  ### Deskriptiv
+  # Binary Variable
+  pt1 <- reactive({
+    if(!input$is_gender) return(NULL)
+    plot_gender
+  })
+  pt2 <- reactive({
+    if(!input$is_scholarship) return(NULL)
+    plot_scholarship
+  })
+  pt3 <- reactive({
+    if(!input$is_hipertension) return(NULL)
+    plot_hipertension
+  })
+  pt4 <- reactive({
+    if(!input$is_diabetes) return(NULL)
+    plot_diabetes
+  })
+  pt5 <- reactive({
+    if(!input$is_alcoholism) return(NULL)
+    plot_alcoholism
+  })
+  pt6 <- reactive({
+    if(!input$is_handcap) return(NULL)
+    plot_handcap
+  })
+  pt7 <- reactive({
+    if(!input$is_sms) return(NULL)
+    plot_sms
+  })
+  pt8 <- reactive({
+    if(!input$is_age) return(NULL)
+    plot_age
+  })
+  ### Output Plot
+  output$plotgraph <- renderPlot({
+    # generate bins based on input$bins from ui.R
+    plotlist <- list(pt1(), pt2(), pt3(), pt4(), pt5(), pt6(), pt7(), pt8())
+    # remove the null plots from plotlist
+    not_null <- !sapply(plotlist, is.null)
+    plotlist <- plotlist[not_null]
+    if (length(plotlist)==0) return(NULL)
+    grid.arrange(grobs=plotlist, ncol=length(plotlist))
+  })
+  
+  # sms detail
+  output$sms_detail_sms_plot <- renderPlot({
+    plot_sms
+  })
+  
+  output$sms_percent <- renderPlot({
+    plot_PercSmsDayDifference
+  })
+  
+  output$sms_absolut <- renderPlot({
+    plot_smsDayDifference
+  })
+  
+  output$sms <- renderPlot({
+    plot_sms
+  })
+  
+  output$sms_extended <- renderPlot({
+    plot_sms_extended
+  })
+  
+  output$dayDifference_factor <- renderPlot({
+    temp <- data
+    temp$is_dayDiff_short <- temp$dayDifferences < 3
+    
+    ggplot(as.data.frame(temp)) + 
+      aes(x = is_dayDiff_short, fill = No.show) +
+      geom_bar(position = "fill") +
+      labs(title="Show Up depending on dayDifference", x="dayDifferences < 3", y="Appointments") +  
+      scale_fill_discrete(name="Show up", labels=c("Yes", "No"))
+  })
+  
   
   
 }
