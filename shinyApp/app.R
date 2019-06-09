@@ -1,12 +1,3 @@
-#
-# This is a Shiny web application. You can run the application by clicking
-# the 'Run App' button above.
-#
-# Find out more about building applications with Shiny here:
-#
-#    http://shiny.rstudio.com/
-#
-
 library(shiny)
 library(dplyr)
 suppressMessages(library(dplyr))
@@ -19,7 +10,6 @@ library(rpart)
 
 data <- read.csv("../KaggleV2-May-2016.csv")
 data <- tbl_df(data)
-glimpse(data)
 
 #####
 # Data Cleanup
@@ -41,6 +31,7 @@ data$ScheduledDay <- as.Date.factor(data$ScheduledDay)
 data$AppointmentDay <- as.Date.factor(data$AppointmentDay)
 
 defData <- data
+defData$dayDifferences <- defData$AppointmentDay - defData$ScheduledDay
 
 ### Clean up variable Age
 # start at age 0
@@ -64,13 +55,6 @@ for(i in 1:length(hc)) {
 # drop levels which are not in use
 data$Handcap <- droplevels(data$Handcap)
 summary(data$Handcap)
-
-#####
-# Feature Engineering
-#####
-#dayDifferences
-data$dayDifferences <- data$AppointmentDay - data$ScheduledDay
-
 
 #####
 # Descriptive statistic
@@ -143,15 +127,47 @@ plot_age <- ggplot(as.data.frame(ageData)) +
 
 #dayDifferences
 data$dayDifferences <- data$AppointmentDay - data$ScheduledDay
-histo_dayDiffernces <- ggplot(data, aes(x=dayDifferences)) + 
+data <- filter(data, data$dayDifferences >= 0)
+range(data$dayDifferences)
+histo_dayDiffernces <- ggplot(data, aes(x=as.integer(dayDifferences))) + 
   geom_histogram(bins=15) +
   geom_bar(position = "fill") +
   labs(title="Distribution Day Difference", x="Day difference", y="Appointments")
+
+minDiffDay <- filter(data, data$dayDifferences <=3)
+maxDiffDay <- filter(data, data$dayDifferences > 3)
+
+length(minDiffDay$PatientId)
+length(maxDiffDay$PatientId)
+length(data$PatientId)
 
 #Show Plots
 #histo_dayDiffernces
 #grid.arrange(plot_gender, plot_scholarship, plot_hipertension, plot_diabetes, ncol=2)
 #grid.arrange(plot_alcoholism, plot_handcap, plot_sms, plot_age, ncol=2)
+
+
+#Ab wieviel Tagesdiffernz wurde ein SMS verschickt
+plot_PercSmsDayDifference <- ggplot(as.data.frame(data)) + 
+  aes(x = dayDifferences, fill = SMS_received) +
+  geom_bar(position = "fill") +
+  labs(title="Percentage Distribution Day Difference", x="Day difference", y="Appointments")
+plot_smsDayDifference <- ggplot(data) + 
+  aes(x = dayDifferences, fill = SMS_received) +
+  geom_bar() +
+  labs(title="Distribution Day Difference", x="Day difference", y="Appointments")
+#grid.arrange(plot_PercSmsDayDifference, plot_smsDayDifference)
+#subset(data, dayDifferences<=2 & SMS_received==1) # Tagesdifferenz von zwei Tagen gibt es kein SMS
+#Wie ist Verhältnis ohne diese kurzen Abständen
+plot_sms_extended <- ggplot(as.data.frame(subset(data, dayDifferences>2))) + 
+  aes(x = SMS_received, fill = No.show) +
+  geom_bar(position = "fill") +
+  labs(title="Show Up SMS Received without DayDifference<=2", x="SMS Received", y="Appointments") +  
+  scale_fill_discrete(name="Show up", labels=c("Yes", "No"))
+
+#grid.arrange(plot_sms, plot_sms_extended)
+#fisher.test(subset(data, dayDifferences>2)$No.show, subset(data, dayDifferences>2)$SMS_received) #signifikant -> sms kommen mehr
+
 
 
 # Define UI for application that draws a histogram
@@ -170,11 +186,9 @@ ui <- navbarPage("BI",
                       )),
              tabPanel("Data Aggregation", 
                       mainPanel(
-                        h4("AppointmentDay vs. SheduleDay"),
-                        h5("AppointmentDay ist the day, when the patient made the Appointment"),
-                        h5("SheduleDay ist the day, when the patient should visit the doctor"),
-                        h4("DayDifference"),
+                        includeHTML("data_aggregation.html"),
                         verbatimTextOutput("data_aggregation"),
+                        includeHTML("data_aggregation_2.html"),
                         plotOutput("data_aggregation_hist")
                       )),
              tabPanel("Descriptiv",
@@ -188,12 +202,25 @@ ui <- navbarPage("BI",
                                      checkboxInput(inputId = "is_hipertension", label = "Hipertension", value = F),
                                      checkboxInput(inputId = "is_diabetes", label = "Diabetes", value = F),
                                      checkboxInput(inputId = "is_alcoholism", label = "Alcoholism", value = F),
-                                     checkboxInput(inputId = "is_handcap", label = "Handcap", value = F)
+                                     checkboxInput(inputId = "is_handcap", label = "Handcap", value = F),
+                                     checkboxInput(inputId = "is_sms", label = "SMS", value = F),
+                                     checkboxInput(inputId = "is_age", label = "Age", value = F)
                         ),
                         
                         # Show a plot of the generated distribution
                         mainPanel(
-                          column(6,plotOutput(outputId="plotgraph",height="400px", width = "800px"))
+                          tabsetPanel(
+                            tabPanel("Plots", column(6,plotOutput(outputId="plotgraph",height="400px", width = "800px"))),
+                            tabPanel("SMS",
+                                     includeHTML("sms_text.html"),
+                                     plotOutput("sms_percent"),
+                                     plotOutput("sms_absolut"),
+                                     plotOutput("minDiffDay"))
+                          )
+                          
+                          
+                          
+                          
                         )
                       )
              ),
@@ -209,6 +236,7 @@ ui <- navbarPage("BI",
 
 # Define server logic required to draw a histogram
 server <- function(input, output) {
+  ### Deskriptiv
    pt1 <- reactive({
      if(!input$is_gender) return(NULL)
       plot_gender
@@ -233,15 +261,49 @@ server <- function(input, output) {
      if(!input$is_handcap) return(NULL)
      plot_handcap
    })
+   pt7 <- reactive({
+     if(!input$is_sms) return(NULL)
+     plot_sms
+   })
+   pt7 <- reactive({
+     if(!input$is_age) return(NULL)
+     plot_age
+   })
    ### Output Plot
    output$plotgraph <- renderPlot({
       # generate bins based on input$bins from ui.R
-      plotlist <- list(pt1(), pt2(), pt3(), pt4(), pt5(), pt6())
+      plotlist <- list(pt1(), pt2(), pt3(), pt4(), pt5(), pt6(), pt7())
       # remove the null plots from plotlist
       not_null <- !sapply(plotlist, is.null)
       plotlist <- plotlist[not_null]
       if (length(plotlist)==0) return(NULL)
       grid.arrange(grobs=plotlist, ncol=length(plotlist))
+   })
+   
+   output$sms_percent <- renderPlot({
+     plot_PercSmsDayDifference
+   })
+   
+   output$sms_absolut <- renderPlot({
+     plot_smsDayDifference
+   })
+   
+   output$minDiffDay <- renderPlot({
+     #range(minDiffDay$dayDifferences)
+     #summary(minDiffDay$No.show)
+     #summary(data$No.show)
+     ggplot(as.data.frame(minDiffDay)) + 
+       aes(x = "", fill = No.show) +
+       geom_bar(position = "fill") +
+       labs(title="Show Up with dayDiff < 4", y="Appointments") +  
+       scale_fill_discrete(name="Show up", labels=c("Yes", "No"))
+     
+     
+     ggplot(as.data.frame(maxDiffDay)) + 
+       aes(x = "", fill = No.show) +
+       geom_bar(position = "fill") +
+       labs(title="Show Up with dayDiff < 4", y="Appointments") +  
+       scale_fill_discrete(name="Show up", labels=c("Yes", "No"))
    })
    
    ### Output Data
@@ -268,9 +330,10 @@ server <- function(input, output) {
          defData$Handcap[i] = 1
        }
      }
-     print("#Summarise Handycap 1, 2, 3 and 4 together")
+     print("#Add up Handycap 1, 2, 3 and 4 together")
      summary(defData$Handcap)
    })
+   
    
    output$cleanup_handcap3 <- renderPrint({
      defData$Handcap <- droplevels(defData$Handcap)
@@ -280,13 +343,14 @@ server <- function(input, output) {
    
    ### Data Aggregation
    output$data_aggregation <- renderPrint({
-     print("#Create column dayDifference")
-     summary(as.integer(data$dayDifferences))
+     range(defData$dayDifferences)
    })
    
    output$data_aggregation_hist <- renderPlot({
      histo_dayDiffernces
    })
+   
+   
 }
 
 # Run the application 
