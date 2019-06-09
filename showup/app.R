@@ -148,11 +148,27 @@ plot_sms_extended <- ggplot(as.data.frame(subset(data, dayDifferences>2))) +
   labs(title="Show Up SMS Received without DayDifference<=2", x="SMS Received", y="Appointments") +  
   scale_fill_discrete(name="Show up", labels=c("Yes", "No"))
 
+######
+# inference
+######
+#statistische Relevanz
+fisher.test(data$No.show, data$Scholarship) #signifikant -> stipendiate kommen weniger 
+fisher.test(data$No.show, data$Hipertension) #signifikant -> hipertensive kommen mehr
+fisher.test(data$No.show, data$Diabetes) #signifikant -> diabetes kommen mehr
+fisher.test(data$No.show, data$Alcoholism) #kein einfluss
+fisher.test(data$No.show, data$Handcap) 
+fisher.test(data$No.show, data$SMS_received) #signifikant -> sms kommen weniger
+
+######
+# ML
+######
+
+
 
 ######
 # shiny App
 ######
-ui <- dashboardPage(
+ui <- dashboardPage(skin = "purple",
   dashboardHeader(title = "BI - No Show"),
   ## Sidebar content
   dashboardSidebar(
@@ -160,6 +176,7 @@ ui <- dashboardPage(
       menuItem("Data Cleanup", tabName = "data_cleanup"),
       menuItem("Aggregation", tabName = "aggregation"),
       menuItem("Deskriptiv", tabName = "descriptiv"),
+      menuItem("Inference", tabName = "inference"),
       menuItem("ML", tabName = "ml")
       
     )
@@ -254,10 +271,43 @@ ui <- dashboardPage(
                                                                     )
                                                     )))
                 
-              ))
-    )
+              )),
+      tabItem(tabName = "inference",
+              fluidPage(tabBox(title = "Fischer Test", width = 12,
+                               id="tabset_fischer",
+                               tabPanel("Scholarship",
+                                        infoBox(
+                                          "Significant", icon = icon("thumbs-up", lib = "glyphicon"),
+                                          color = "green"
+                                        ),
+                                        verbatimTextOutput("fischer_scholarship")),
+                               tabPanel("Hipertension",
+                                        infoBox(
+                                          "Significant", icon = icon("thumbs-up", lib = "glyphicon"),
+                                          color = "green"
+                                        ),
+                                        verbatimTextOutput("fischer_hipertension")),
+                               tabPanel("Diabetes",
+                                        infoBox(
+                                          "Significant", icon = icon("thumbs-up", lib = "glyphicon"),
+                                          color = "green"
+                                        ),
+                                        verbatimTextOutput("fischer_diabetes")),
+                               tabPanel("Alcoholism",
+                                        infoBox(
+                                          "Not Significant", icon = icon("thumbs-down", lib = "glyphicon"),
+                                          color = "yellow"
+                                        ),
+                                        verbatimTextOutput("fischer_alcoholism"))
+                               
+                        )
+              )
+    ),
+    tabItem(tabName = "ml",
+            fluidPage())
   )
   
+  )
   
 )
 
@@ -387,6 +437,25 @@ server <- function(input, output) {
       labs(title="Show Up depending on dayDifference", x="dayDifferences < 3", y="Appointments") +  
       scale_fill_discrete(name="Show up", labels=c("Yes", "No"))
   })
+  
+  ### Inference
+  output$fischer_scholarship <- renderPrint({
+    fisher.test(data$No.show, data$Scholarship)
+  })
+  
+  output$fischer_hipertension <- renderPrint({
+    fisher.test(data$No.show, data$Hipertension)
+  })
+  
+  output$fischer_diabetes <- renderPrint({
+    fisher.test(data$No.show, data$Diabetes)
+  })
+  
+  output$fischer_alcoholism <- renderPrint({
+    fisher.test(data$No.show, data$Alcoholism)
+  })
+  
+  
   
   
   
