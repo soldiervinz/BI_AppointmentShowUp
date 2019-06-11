@@ -162,6 +162,7 @@ fisher.test(data$No.show, data$SMS_received) #signifikant -> sms kommen weniger
 ######
 # ML
 ######
+fit <- rpart(No.show ~ Age+Gender+Scholarship+Hipertension+Diabetes+Alcoholism+Handcap+SMS_received+dayDifferences, method="class", data=data, control=rpart.control(cp=0.0001,maxdepth=7))
 
 
 
@@ -189,7 +190,6 @@ ui <- dashboardPage(skin = "purple",
               fluidRow(
                 # Data Table
                 box(width = 12, title = "Data Table", solidHeader = TRUE,
-                  "The variable Age has an error", br(), "More box content",
                   tableOutput("data")
                 ),
                 # Age Variable
@@ -304,7 +304,12 @@ ui <- dashboardPage(skin = "purple",
               )
     ),
     tabItem(tabName = "ml",
-            fluidPage())
+            fluidPage(
+              verbatimTextOutput("ml"),
+              plotOutput("ml_plotcp"),
+              plotOutput("ml_tree"),
+              verbatimTextOutput("ml_summary")
+            ))
   )
   
   )
@@ -314,9 +319,12 @@ ui <- dashboardPage(skin = "purple",
 server <- function(input, output) {
   ### Output Data
   # Data Table
+  temp2 = data
+  temp2$ScheduledDay <- as.character(temp2$ScheduledDay)
+  temp2$AppointmentDay <- as.character(temp2$AppointmentDay)
   output$data <- renderTable({
-    head(data[, 3:14])
-  }, spacing = "xs")
+    head(temp2[, 3:14])
+  }, spacing = "s")
   
   # Variable Age
   output$cleanup_age <- renderPrint({
@@ -454,6 +462,32 @@ server <- function(input, output) {
   output$fischer_alcoholism <- renderPrint({
     fisher.test(data$No.show, data$Alcoholism)
   })
+  
+  ### ML
+  output$ml <- renderPrint({
+    #dayDifferences hat einen grossen Einfluss
+    #fit <- rpart(No.show ~ Age+Gender+Scholarship+Hipertension+Diabetes+Alcoholism+Handcap+SMS_received+dayDifferences, method="class", data=data, control=rpart.control(cp=0.0001,maxdepth=7))
+    printcp(fit) # display the results
+  })
+  
+  output$ml_plotcp <- renderPlot({
+    #fit <- rpart(No.show ~ Age+Gender+Scholarship+Hipertension+Diabetes+Alcoholism+Handcap+SMS_received+dayDifferences, method="class", data=data, control=rpart.control(cp=0.0001,maxdepth=7))
+    plotcp(fit) # visualize cross-validation results # Anzahl Ebene basierend auf zuf?llige Verteilung basierend. 
+  })
+  
+  output$ml_tree <- renderPlot({
+    #fit <- rpart(No.show ~ Age+Gender+Scholarship+Hipertension+Diabetes+Alcoholism+Handcap+SMS_received+dayDifferences, method="class", data=data, control=rpart.control(cp=0.0001,maxdepth=7))
+    plot(fit, uniform=TRUE, main="Classification Tree for Biopsy")
+    text(fit, use.n=TRUE, all=TRUE, cex=.8)
+    
+  })
+  
+  output$ml_summary <- renderPrint({
+    #fit <- rpart(No.show ~ Age+Gender+Scholarship+Hipertension+Diabetes+Alcoholism+Handcap+SMS_received+dayDifferences, method="class", data=data, control=rpart.control(cp=0.0001,maxdepth=7))
+    summary(fit) # detailed summary of splits # wann er wirklich gesplittet hat
+  })
+  
+  
   
   
   
