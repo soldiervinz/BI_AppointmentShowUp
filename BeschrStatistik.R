@@ -138,7 +138,7 @@ plot_smsDayDifference <- ggplot(data) +
   labs(title="Distribution Day Difference", x="Day difference", y="Appointments")
 grid.arrange(plot_PercSmsDayDifference, plot_smsDayDifference)
 subset(data, dayDifferences<=2 & SMS_received==1) # Tagesdifferenz von zwei Tagen gibt es kein SMS
-#Wie ist Verhältnis ohne diese kurzen Abständen
+#Wie ist Verh?ltnis ohne diese kurzen Abst?nden
 plot_sms_extended <- ggplot(as.data.frame(subset(data, dayDifferences>2))) + 
   aes(x = SMS_received, fill = No.show) +
   geom_bar(position = "fill") +
@@ -150,14 +150,17 @@ fisher.test(subset(data, dayDifferences>2)$No.show, subset(data, dayDifferences>
 #Fragestellung: Wann kommen die Leute weniger?
 #dayDifferences hat einen grossen Einfluss
 fit <- rpart(No.show ~ Age+Gender+Scholarship+Hipertension+Diabetes+Alcoholism+Handcap+SMS_received+dayDifferences, method="class", data=data, control=rpart.control(cp=0.0001,maxdepth=7))
-#Nur dayDifferences
-fit <- rpart(No.show ~ dayDifferences, method="class", data=data, control=rpart.control(cp=0.00001))
+printcp(fit) # display the results
+plotcp(fit) # visualize cross-validation results # Anzahl Ebene basierend auf zuf?llige Verteilung basierend. 
+summary(fit) # detailed summary of splits # wann er wirklich gesplittet hat
+plot(fit, uniform=TRUE, main="Classification Tree for Biopsy")
+text(fit, use.n=TRUE, all=TRUE, cex=.8)
+
 #Extremwerte unter drei Tagen entfernen
 smallData <- subset(data, dayDifferences>2)
 fit <- rpart(No.show ~ Age+Gender+Scholarship+Hipertension+Diabetes+Alcoholism+Handcap+SMS_received+dayDifferences, method="class", data=smallData, control=rpart.control(cp=0.0001,maxdepth=8))
-
 printcp(fit) # display the results
-plotcp(fit) # visualize cross-validation results # Anzahl Ebene basierend auf zufällige Verteilung basierend. 
+plotcp(fit) # visualize cross-validation results # Anzahl Ebene basierend auf zuf?llige Verteilung basierend. 
 summary(fit) # detailed summary of splits # wann er wirklich gesplittet hat
 plot(fit, uniform=TRUE, main="Classification Tree for Biopsy")
 text(fit, use.n=TRUE, all=TRUE, cex=.8)
