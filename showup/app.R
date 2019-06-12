@@ -165,7 +165,7 @@ fisher.test(data$No.show, data$SMS_received) #signifikant -> sms kommen weniger
 fit <- rpart(No.show ~ Age+Gender+Scholarship+Hipertension+Diabetes+Alcoholism+Handcap+SMS_received+dayDifferences, method="class", data=data, control=rpart.control(cp=0.0001,maxdepth=7))
 
 #Extremwerte unter drei Tagen entfernen
-smallData <- subset(data, dayDifferences>2)
+smallData <- subset(data, dayDifferences>0)
 fit2 <- rpart(No.show ~ Age+Gender+Scholarship+Hipertension+Diabetes+Alcoholism+Handcap+SMS_received+dayDifferences, method="class", data=smallData, control=rpart.control(cp=0.0001,maxdepth=8))
 
 
@@ -312,7 +312,7 @@ ui <- dashboardPage(skin = "purple",
                     tabPanel("All data",
                              plotOutput("ml_tree"),
                              verbatimTextOutput("ml")),
-                    tabPanel("dayDifference > 2",
+                    tabPanel("dayDifference > 0",
                              plotOutput("ml_tree_without"),
                              verbatimTextOutput("ml_without")))
             ))
