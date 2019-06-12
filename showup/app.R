@@ -164,6 +164,9 @@ fisher.test(data$No.show, data$SMS_received) #signifikant -> sms kommen weniger
 ######
 fit <- rpart(No.show ~ Age+Gender+Scholarship+Hipertension+Diabetes+Alcoholism+Handcap+SMS_received+dayDifferences, method="class", data=data, control=rpart.control(cp=0.0001,maxdepth=7))
 
+#Extremwerte unter drei Tagen entfernen
+smallData <- subset(data, dayDifferences>2)
+fit2 <- rpart(No.show ~ Age+Gender+Scholarship+Hipertension+Diabetes+Alcoholism+Handcap+SMS_received+dayDifferences, method="class", data=smallData, control=rpart.control(cp=0.0001,maxdepth=8))
 
 
 ######
@@ -305,10 +308,13 @@ ui <- dashboardPage(skin = "purple",
     ),
     tabItem(tabName = "ml",
             fluidPage(
-              verbatimTextOutput("ml"),
-              plotOutput("ml_plotcp"),
-              plotOutput("ml_tree"),
-              verbatimTextOutput("ml_summary")
+             tabBox(title = "Tree", width = 12,
+                    tabPanel("All data",
+                             plotOutput("ml_tree"),
+                             verbatimTextOutput("ml")),
+                    tabPanel("dayDifference > 2",
+                             plotOutput("ml_tree_without"),
+                             verbatimTextOutput("ml_without")))
             ))
   )
   
@@ -465,29 +471,26 @@ server <- function(input, output) {
   
   ### ML
   output$ml <- renderPrint({
-    #dayDifferences hat einen grossen Einfluss
-    #fit <- rpart(No.show ~ Age+Gender+Scholarship+Hipertension+Diabetes+Alcoholism+Handcap+SMS_received+dayDifferences, method="class", data=data, control=rpart.control(cp=0.0001,maxdepth=7))
     printcp(fit) # display the results
   })
   
-  output$ml_plotcp <- renderPlot({
-    #fit <- rpart(No.show ~ Age+Gender+Scholarship+Hipertension+Diabetes+Alcoholism+Handcap+SMS_received+dayDifferences, method="class", data=data, control=rpart.control(cp=0.0001,maxdepth=7))
-    plotcp(fit) # visualize cross-validation results # Anzahl Ebene basierend auf zuf?llige Verteilung basierend. 
+  output$ml_without <- renderPrint({
+    printcp(fit2) # display the results
   })
+  
   
   output$ml_tree <- renderPlot({
-    #fit <- rpart(No.show ~ Age+Gender+Scholarship+Hipertension+Diabetes+Alcoholism+Handcap+SMS_received+dayDifferences, method="class", data=data, control=rpart.control(cp=0.0001,maxdepth=7))
     plot(fit, uniform=TRUE, main="Classification Tree for Biopsy")
     text(fit, use.n=TRUE, all=TRUE, cex=.8)
-    
-  })
-  
-  output$ml_summary <- renderPrint({
-    #fit <- rpart(No.show ~ Age+Gender+Scholarship+Hipertension+Diabetes+Alcoholism+Handcap+SMS_received+dayDifferences, method="class", data=data, control=rpart.control(cp=0.0001,maxdepth=7))
-    summary(fit) # detailed summary of splits # wann er wirklich gesplittet hat
   })
   
   
+  output$ml_tree_without <- renderPlot({
+    plot(fit2, uniform=TRUE, main="Classification Tree for Biopsy")
+    text(fit2, use.n=TRUE, all=TRUE, cex=.8)
+  })
+  
+
   
   
   
