@@ -157,7 +157,7 @@ plot(fit, uniform=TRUE, main="Classification Tree for Biopsy")
 text(fit, use.n=TRUE, all=TRUE, cex=.8)
 
 #Extremwerte unter drei Tagen entfernen
-smallData <- subset(data, dayDifferences>2)
+smallData <- subset(data, dayDifferences>0)
 fit <- rpart(No.show ~ Age+Gender+Scholarship+Hipertension+Diabetes+Alcoholism+Handcap+SMS_received+dayDifferences, method="class", data=smallData, control=rpart.control(cp=0.0001,maxdepth=8))
 printcp(fit) # display the results
 plotcp(fit) # visualize cross-validation results # Anzahl Ebene basierend auf zuf?llige Verteilung basierend. 
