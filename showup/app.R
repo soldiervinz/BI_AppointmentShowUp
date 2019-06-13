@@ -255,7 +255,7 @@ ui <- dashboardPage(skin = "purple",
                                                                         "At first glance it seems that reveiving an sms has an negativ impact of showing up",
                                                                         plotOutput("sms_detail_sms_plot")),
                                                                     box( width = 12,
-                                                                        "But in the plots you can see, that (almost) nobody gets an sms if the dayDifference is <= 3 days",
+                                                                        "But in the plots you can see, that (almost) nobody gets an sms if the dayDifference is < 3 days",
                                                                         plotOutput("sms_percent")
                                                                         ),
                                                                     box(width = 12,
