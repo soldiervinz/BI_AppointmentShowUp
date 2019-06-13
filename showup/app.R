@@ -152,6 +152,7 @@ plot_sms_extended <- ggplot(as.data.frame(subset(data, dayDifferences>2))) +
 # inference
 ######
 #statistische Relevanz
+
 fisher.test(data$No.show, data$Scholarship) #signifikant -> stipendiate kommen weniger 
 fisher.test(data$No.show, data$Hipertension) #signifikant -> hipertensive kommen mehr
 fisher.test(data$No.show, data$Diabetes) #signifikant -> diabetes kommen mehr
@@ -276,8 +277,21 @@ ui <- dashboardPage(skin = "purple",
                 
               )),
       tabItem(tabName = "inference",
-              fluidPage(tabBox(title = "Fischer Test", width = 12,
+              fluidPage(tabBox(title = "Exakter Fischer Test", width = 12,
                                id="tabset_fischer",
+                               tabPanel("dayDifference is short",
+                                        infoBox(
+                                          "Significant", icon = icon("thumbs-up", lib = "glyphicon"),
+                                          color = "green"
+                                        ),
+                                        verbatimTextOutput("fischer_dayDifference")),
+                               tabPanel("Gender",
+                                        infoBox(
+                                          "Not Significant", icon = icon("thumbs-down", lib = "glyphicon"),
+                                          color = "yellow"
+                                        ),
+                                        verbatimTextOutput("fischer_gender")),
+                               
                                tabPanel("Scholarship",
                                         infoBox(
                                           "Significant", icon = icon("thumbs-up", lib = "glyphicon"),
@@ -453,6 +467,17 @@ server <- function(input, output) {
   })
   
   ### Inference
+  output$fischer_dayDifference <- renderPrint({
+    temp <- data
+    temp$is_dayDiff_short <- temp$dayDifferences < 3
+    fisher.test(temp$No.show, temp$is_dayDiff_short)
+  })
+
+  
+  output$fischer_gender <- renderPrint({
+    fisher.test(data$No.show, data$Gender)
+  })
+  
   output$fischer_scholarship <- renderPrint({
     fisher.test(data$No.show, data$Scholarship)
   })
