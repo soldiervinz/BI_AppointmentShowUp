@@ -149,7 +149,7 @@ fisher.test(subset(data, dayDifferences>2)$No.show, subset(data, dayDifferences>
 
 #Fragestellung: Wann kommen die Leute weniger?
 #dayDifferences hat einen grossen Einfluss
-fit <- rpart(No.show ~ Age+Gender+Scholarship+Hipertension+Diabetes+Alcoholism+Handcap+SMS_received+dayDifferences, method="class", data=data, control=rpart.control(cp=0.0001,maxdepth=7))
+fit <- rpart(No.show ~ Age+Gender+Scholarship+Hipertension+Diabetes+Alcoholism+Handcap+SMS_received+dayDifferences, method="class", data=data, control=rpart.control(cp=0.0001,maxdepth=6))
 printcp(fit) # display the results
 plotcp(fit) # visualize cross-validation results # Anzahl Ebene basierend auf zuf?llige Verteilung basierend. 
 summary(fit) # detailed summary of splits # wann er wirklich gesplittet hat
@@ -158,9 +158,10 @@ text(fit, use.n=TRUE, all=TRUE, cex=.8)
 
 #Extremwerte unter drei Tagen entfernen
 smallData <- subset(data, dayDifferences>0)
-fit <- rpart(No.show ~ Age+Gender+Scholarship+Hipertension+Diabetes+Alcoholism+Handcap+SMS_received+dayDifferences, method="class", data=smallData, control=rpart.control(cp=0.0001,maxdepth=8))
+fit <- rpart(No.show ~ Age+Gender+Scholarship+Hipertension+Diabetes+Alcoholism+Handcap+SMS_received+dayDifferences, method="class", data=smallData, control=rpart.control(cp=0.0001,maxdepth=7))
 printcp(fit) # display the results
 plotcp(fit) # visualize cross-validation results # Anzahl Ebene basierend auf zuf?llige Verteilung basierend. 
 summary(fit) # detailed summary of splits # wann er wirklich gesplittet hat
 plot(fit, uniform=TRUE, main="Classification Tree for Biopsy")
 text(fit, use.n=TRUE, all=TRUE, cex=.8)
+
